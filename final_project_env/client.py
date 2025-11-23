@@ -2,12 +2,13 @@ import argparse
 import json
 import numpy as np
 import requests
+import gymnasium as gym
 
 
-class RemoteRacecarEnv:
+class RemoteRacecarEnv(gym.Env):
+    metadata = {"render_modes": []}
+
     def __init__(self, url: str, action_low=None, action_high=None):
-        import gymnasium as gym
-
         self.url = url
         # Probe one observation to infer shape/dtype
         first = requests.get(f"{self.url}")
@@ -66,6 +67,12 @@ class RemoteRacecarEnv:
         info = {}
         self._last_obs = obs
         return obs, reward, terminated, truncated, info
+
+    def render(self):
+        return None
+
+    def close(self):
+        pass
 
 
 class CarRacingAgent:
