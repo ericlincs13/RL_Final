@@ -42,7 +42,8 @@ class RemoteRacecarEnv(gym.Env):
         response = requests.get(f"{self.url}")
         if json.loads(response.text).get("error"):
             raise RuntimeError(json.loads(response.text)["error"])
-        obs = np.asarray(json.loads(response.text)["observation"], dtype=np.uint8)
+        data = json.loads(response.text)
+        obs = np.asarray(data["observation"], dtype=np.uint8)
         self._last_obs = obs
         info = {}
         return obs, info
@@ -55,13 +56,9 @@ class RemoteRacecarEnv(gym.Env):
         if json.loads(response.text).get("error"):
             raise RuntimeError(json.loads(response.text)["error"])
         data = json.loads(response.text)
-        obs = (
-            np.asarray(data["observation"], dtype=np.uint8)
-            if "observation" in data
-            else self._last_obs
-        )
         reward = float(data.get("reward", 0.0))
         terminated = bool(data.get("terminal", False))
+        obs = np.asarray(data["observation"], dtype=np.uint8)
         # No explicit truncation signal in the protocol; default to False
         truncated = False
         info = {}

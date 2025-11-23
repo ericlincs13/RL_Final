@@ -104,7 +104,7 @@ def get_observation(port_num):
         global obs, last_get_obs_time
 
         if terminal:
-            return jsonify({"terminal": bool(terminal)})
+            return jsonify({"observation": obs.tolist(), "terminal": bool(terminal)})
 
         # Record time
         last_get_obs_time = time.time()
@@ -129,7 +129,7 @@ def set_action(port_num):
         accu_time += time.time() - last_get_obs_time
 
         step += 1
-        obs, _, terminal, trunc, info = env.step(action)
+        obs, reward, terminal, trunc, info = env.step(action)
 
         progress = info["progress"]
         lap = int(info["lap"])
@@ -174,7 +174,13 @@ def set_action(port_num):
             print(f"Video saved to {video_name}!")
             print(f"===================================")
 
-        return jsonify({"terminal": bool(terminal)})
+        return jsonify(
+            {
+                "observation": obs.tolist(),
+                "reward": reward,
+                "terminal": bool(terminal),
+            }
+        )
     except Exception as e:
         if SERVER_RAISE_EXCEPTION:
             raise e
