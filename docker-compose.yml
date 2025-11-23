@@ -1,6 +1,5 @@
 services:
   server-1:
-    build: .
     image: rl-final:latest
     ports:
       - "5001:5000"
