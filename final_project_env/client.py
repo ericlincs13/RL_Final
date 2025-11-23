@@ -147,7 +147,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         type=str,
-        default="ppo_racecar.zip",
+        default="weights/ppo_racecar.zip",
         help="Path to SB3 PPO model (.zip). If not found, fallback to random actions.",
     )
     parser.add_argument(
