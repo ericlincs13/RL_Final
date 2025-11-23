@@ -151,14 +151,9 @@ if __name__ == "__main__":
         help="Path to SB3 PPO model (.zip). If not found, fallback to random actions.",
     )
     parser.add_argument(
-        "--deterministic",
+        "--eval",
         action="store_true",
-        help="Use deterministic actions at inference (recommended for continuous control).",
-    )
-    parser.add_argument(
-        "--train",
-        action="store_true",
-        help="Train a PPO agent against the remote server instead of running inference.",
+        help="Evaluate the PPO agent against the remote server.",
     )
     parser.add_argument(
         "--total-timesteps",
@@ -187,7 +182,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Train or run inference
-    if args.train:
+    if not args.eval:
         try:
             from stable_baselines3 import PPO
         except Exception as e:
@@ -239,7 +234,7 @@ if __name__ == "__main__":
                 low=np.array([-1, -1]), high=np.array([1, 1]), dtype=np.float32
             ),
             model_path=args.model,
-            deterministic=bool(args.deterministic),
+            deterministic=True,
             device=args.device,
         )
 
