@@ -12,7 +12,7 @@ agents:
         laps: 99999999999,
         time_limit: 100.0, # <---
         terminate_on_collision: False, # <---
-        collision_reward: 0.0,
+        collision_reward: -100.0,
         progress_reward: 1.0,
         frame_reward: 0.0,
       }
