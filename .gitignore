@@ -2,3 +2,4 @@ __pycache__/
 *.log
 *.pdf
 *.pptx
+*.egg-info
