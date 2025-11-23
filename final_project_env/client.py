@@ -154,7 +154,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         type=str,
-        default="weights/ppo_racecar.zip",
         help="Path to SB3 PPO model (.zip). If not found, fallback to random actions.",
     )
     parser.add_argument(
@@ -186,12 +185,25 @@ if __name__ == "__main__":
         default=128,
         help="Batch size for PPO.",
     )
+    parser.add_argument(
+        "--save-freq",
+        type=int,
+        default=100000,
+        help="Save checkpoint every N environment steps during training.",
+    )
+    parser.add_argument(
+        "--save-dir",
+        type=str,
+        default="weights",
+        help="Directory to store periodic PPO checkpoints.",
+    )
     args = parser.parse_args()
 
     # Train or run inference
     if not args.eval:
         try:
             from stable_baselines3 import PPO
+            from stable_baselines3.common.callbacks import CheckpointCallback
         except Exception as e:
             raise RuntimeError(f"Stable-Baselines3 is required for training: {e}")
 
@@ -229,7 +241,20 @@ if __name__ == "__main__":
         print(
             f"Start PPO training on device={device} for total_timesteps={args.total_timesteps}"
         )
-        model.learn(total_timesteps=int(args.total_timesteps))
+        # Prepare checkpoint callback for periodic saving
+        import os
+
+        os.makedirs(args.save_dir, exist_ok=True)
+        checkpoint_callback = CheckpointCallback(
+            save_freq=int(args.save_freq),
+            save_path=args.save_dir,
+            name_prefix="ppo_racecar",
+            save_replay_buffer=False,
+            save_vecnormalize=False,
+        )
+        model.learn(
+            total_timesteps=int(args.total_timesteps), callback=checkpoint_callback
+        )
         model.save(args.model)
         print(f"Saved PPO model to: {args.model}")
     else:
