@@ -12,7 +12,10 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /workingdirectory
 
 #
-COPY requirements.txt /workingdirectory/
-RUN pip install -r requirements.txt \
-    && rm requirements.txt
+COPY final_project_env/ /workingdirectory/
+
+#
+RUN python3 -m pip install -e .
     
+#
+CMD ["python3", "server.py", "--sid", "313551174", "--scenario", "austria_competition"]

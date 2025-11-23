@@ -1,0 +1,43 @@
+# VCS
+.git
+.gitignore
+
+# OS / Editors
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Python caches / build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.pytype/
+.coverage
+htmlcov/
+build/
+dist/
+.eggs/
+*.egg-info/
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Project-specific (not needed in image)
+final_project_env/results/
+final_project_env/tests/
+*.pdf
+*.pptx
+*.ppt
+
+# Tooling metadata
+.cursor/
+
