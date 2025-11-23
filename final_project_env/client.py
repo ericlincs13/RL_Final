@@ -146,12 +146,6 @@ def connect(agent, url: str = "http://localhost:5000"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--url",
-        type=str,
-        default="http://localhost:5000",
-        help="The url of the server.",
-    )
-    parser.add_argument(
         "--model",
         type=str,
         help="Path to SB3 PPO model (.zip). If not found, fallback to random actions.",
@@ -197,6 +191,31 @@ if __name__ == "__main__":
         default="weights",
         help="Directory to store periodic PPO checkpoints.",
     )
+    parser.add_argument(
+        "--n-envs",
+        type=int,
+        default=8,
+        help="Number of parallel remote envs (e.g., 8 for ports 5001-5008).",
+    )
+    parser.add_argument(
+        "--port-start",
+        type=int,
+        default=5001,
+        help="Starting port for parallel envs (inclusive).",
+    )
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="http://localhost",
+        help="Remote host scheme+domain used to build env URLs (e.g., http://localhost).",
+    )
+    parser.add_argument(
+        "--vec-backend",
+        type=str,
+        default="subproc",
+        choices=["subproc", "dummy"],
+        help="Vector env backend to use for parallelism.",
+    )
     args = parser.parse_args()
 
     # Train or run inference
@@ -204,6 +223,7 @@ if __name__ == "__main__":
         try:
             from stable_baselines3 import PPO
             from stable_baselines3.common.callbacks import CheckpointCallback
+            from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
         except Exception as e:
             raise RuntimeError(f"Stable-Baselines3 is required for training: {e}")
 
@@ -221,8 +241,18 @@ if __name__ == "__main__":
                     "Warning: torch not available to check CUDA; continuing with 'cuda' which may fail."
                 )
 
-        # Create remote proxy env (no local physics)
-        env = RemoteRacecarEnv(args.url)
+        # Create vectorized remote proxy envs (no local physics)
+        # Build URLs like http://localhost:5001 ... :5001 + n_envs - 1
+        urls = [f"{args.host}:{args.port_start + i}" for i in range(int(args.n_envs))]
+
+        def _make_env(_url):
+            return lambda: RemoteRacecarEnv(_url)
+
+        env_fns = [_make_env(u) for u in urls]
+        if args.vec_backend == "subproc":
+            env = SubprocVecEnv(env_fns)
+        else:
+            env = DummyVecEnv(env_fns)
 
         # Choose policy: default CnnPolicy for image observation
         policy = "CnnPolicy"
