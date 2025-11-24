@@ -227,7 +227,7 @@ if __name__ == "__main__":
         try:
             from stable_baselines3 import PPO
             from stable_baselines3.common.callbacks import CheckpointCallback
-            from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
+            from stable_baselines3.common.vec_env import SubprocVecEnv
         except Exception as e:
             raise RuntimeError(f"Stable-Baselines3 is required for training: {e}")
 
@@ -245,13 +245,17 @@ if __name__ == "__main__":
                     "Warning: torch not available to check CUDA; continuing with 'cuda' which may fail."
                 )
 
+        import server
+
+        server.init_server()
+
         def _make_env():
             return lambda: RemoteRacecarEnv(url=args.url)
 
         # Enable gSDE for continuous control per SB3 recommendation notes
         model = PPO(
             policy="CnnPolicy",
-            env=SubprocVecEnv([_make_env]),
+            env=SubprocVecEnv([_make_env() for _ in range(args.n_envs)]),
             device=device,
             learning_rate=args.lr,
             batch_size=args.batch_size,
@@ -276,8 +280,7 @@ if __name__ == "__main__":
         model.learn(
             total_timesteps=int(args.total_timesteps), callback=checkpoint_callback
         )
-        model.save(args.model)
-        print(f"Saved PPO model to: {args.model}")
+        model.save(f"{args.save_dir}/ppo_racecar_final.zip")
     else:
         # Initialize the RL Agent for inference
         import gymnasium as gym

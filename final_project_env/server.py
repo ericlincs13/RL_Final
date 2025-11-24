@@ -98,7 +98,7 @@ def record_video(filename: str):
     video.release()
 
 
-def get_observation(port_num):
+def get_observation(port_num=None):
     """Return the 3x128x128"""
     try:
         global obs, last_get_obs_time
@@ -117,7 +117,7 @@ def get_observation(port_num):
         return {"error": str(e)}
 
 
-def set_action(action, port_num, skip_print=False):
+def set_action(action, port_num=None, skip_print=False):
     try:
         global obs, reward, terminal, trunc, info, step, output_freq, sid, accu_time
 
@@ -233,7 +233,9 @@ def get_args():
     global sid, output_freq, port, scenario, host, MAX_ACCU_TIME
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-freq", type=int, default=5, help="output frequency")
-    parser.add_argument("--sid", type=str, required=True, help="The id of the student.")
+    parser.add_argument(
+        "--sid", type=str, default="313551174", help="The id of the student."
+    )
     parser.add_argument(
         "--port", type=int, default=5000, help="The port of the server."
     )
@@ -241,7 +243,7 @@ def get_args():
         "--host", type=str, default="0.0.0.0", help="The host of the server."
     )
     parser.add_argument(
-        "--scenario", type=str, required=True, help="The scenario name."
+        "--scenario", type=str, default="austria_competition", help="The scenario name."
     )
     args = parser.parse_args()
     sid = args.sid
@@ -255,7 +257,9 @@ def get_args():
         MAX_ACCU_TIME = 600
 
 
-if __name__ == "__main__":
+def init_server():
+    global env, obs, info
+
     get_args()
 
     env = RaceEnv(
@@ -264,5 +268,9 @@ if __name__ == "__main__":
         reset_when_collision=True if "austria" in scenario else False,
     )
     obs, info = env.reset()
+
+
+if __name__ == "__main__":
+    init_server()
     #
     app.run(debug=False, host="0.0.0.0", port=port)
