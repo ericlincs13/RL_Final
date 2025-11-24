@@ -108,23 +108,23 @@ class CarRacingAgent:
         self.action_space = action_space
         self.deterministic = deterministic
         self.model = None
-        # Lazy import of SB3 and attempt to load PPO model (no env creation)
+        # Lazy import of SB3 and attempt to load TD3 model (no env creation)
         try:
-            from stable_baselines3 import PPO  # type: ignore
+            from stable_baselines3 import TD3  # type: ignore
             import os
 
             if model_path is not None and os.path.isfile(model_path):
-                self.model = PPO.load(model_path, device=device)
-                print(f"Loaded PPO model from: {model_path}")
+                self.model = TD3.load(model_path, device=device)
+                print(f"Loaded TD3 model from: {model_path}")
             else:
                 if model_path:
                     print(
-                        f"PPO model not found at: {model_path} — falling back to random actions."
+                        f"TD3 model not found at: {model_path} — falling back to random actions."
                     )
         except Exception as e:
             # SB3 not installed or load failed
             print(
-                f"PPO not available or failed to load ({e}) — falling back to random actions."
+                f"TD3 not available or failed to load ({e}) — falling back to random actions."
             )
 
     def act(self, observation):
@@ -170,7 +170,7 @@ def connect(agent, url=None):
 
 def training(args):
     try:
-        from stable_baselines3 import PPO
+        from stable_baselines3 import TD3
         from stable_baselines3.common.callbacks import (
             CallbackList,
             CheckpointCallback,
@@ -197,15 +197,15 @@ def training(args):
     def _make_env():
         return lambda: RemoteRacecarEnv(url=args.url)
 
-    # Enable gSDE for continuous control per SB3 recommendation notes
-    model = PPO(
+    # TD3 for continuous control
+    env = SubprocVecEnv([_make_env() for _ in range(args.n_envs)])
+    model = TD3(
         policy="CnnPolicy",
-        env=SubprocVecEnv([_make_env() for _ in range(args.n_envs)]),
+        env=env,
         device=device,
         learning_rate=args.lr,
         batch_size=args.batch_size,
         verbose=1,
-        use_sde=True,
     )
 
     print(
@@ -218,7 +218,7 @@ def training(args):
     checkpoint_callback = CheckpointCallback(
         save_freq=int(args.save_freq),
         save_path=args.save_dir,
-        name_prefix="ppo_racecar",
+        name_prefix="td3_racecar",
         save_replay_buffer=False,
         save_vecnormalize=False,
     )
@@ -245,7 +245,7 @@ def training(args):
         callback = CallbackList(callback_list)
 
     model.learn(total_timesteps=int(args.total_timesteps), callback=callback)
-    model.save(f"{args.save_dir}/ppo_racecar_final.zip")
+    model.save(f"{args.save_dir}/td3_racecar_final.zip")
 
 
 if __name__ == "__main__":
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         type=str,
-        help="Path to SB3 PPO model (.zip). If not found, fallback to random actions.",
+        help="Path to SB3 TD3 model (.zip). If not found, fallback to random actions.",
     )
     parser.add_argument(
         "--eval",
@@ -269,25 +269,25 @@ if __name__ == "__main__":
         "--total-timesteps",
         type=int,
         default=1e8,
-        help="Total timesteps for PPO training.",
+        help="Total timesteps for TD3 training.",
     )
     parser.add_argument(
         "--device",
         type=str,
         default="cuda",
-        help='Device to use for PPO ("cuda" for GPU, or "cpu").',
+        help='Device to use for TD3 ("cuda" for GPU, or "cpu").',
     )
     parser.add_argument(
         "--lr",
         type=float,
-        default=1e-4,
-        help="Learning rate for PPO.",
+        default=1e-3,
+        help="Learning rate for TD3.",
     )
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=128,
-        help="Batch size for PPO.",
+        default=256,
+        help="Batch size for TD3.",
     )
     parser.add_argument(
         "--save-freq",
@@ -312,7 +312,7 @@ if __name__ == "__main__":
         type=int,
         default=10000,
         help=(
-            "Evaluate the PPO agent every N environment steps during training "
+            "Evaluate the TD3 agent every N environment steps during training "
             "(set <= 0 to disable evaluation)."
         ),
     )
