@@ -41,6 +41,12 @@ class RemoteRacecarEnv(gym.Env):
 
     def __init__(self, url=None, action_low=None, action_high=None):
         self.url = url
+
+        if not url:
+            import server
+
+            server.init_server()
+
         # Probe one observation to infer shape/dtype
         first = get_observation(self.url)
         obs = np.asarray(first["observation"], dtype=np.uint8)
@@ -244,10 +250,6 @@ if __name__ == "__main__":
                 print(
                     "Warning: torch not available to check CUDA; continuing with 'cuda' which may fail."
                 )
-
-        import server
-
-        server.init_server()
 
         def _make_env():
             return lambda: RemoteRacecarEnv(url=args.url)
