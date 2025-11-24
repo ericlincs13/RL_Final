@@ -204,8 +204,11 @@ def training(args):
         env=env,
         device=device,
         learning_rate=args.lr,
+        learning_starts=args.learning_starts,
+        train_freq=args.train_freq,
         batch_size=args.batch_size,
-        verbose=1,
+        buffer_size=args.buffer_size,
+        verbose=0,
     )
 
     print(
@@ -284,10 +287,28 @@ if __name__ == "__main__":
         help="Learning rate for TD3.",
     )
     parser.add_argument(
+        "--learning_starts",
+        type=float,
+        default=10000,
+        help="Learning starts for TD3.",
+    )
+    parser.add_argument(
+        "--train_freq",
+        type=int,
+        default=4,
+        help="Train frequency for TD3.",
+    )
+    parser.add_argument(
         "--batch-size",
         type=int,
-        default=256,
+        default=32,
         help="Batch size for TD3.",
+    )
+    parser.add_argument(
+        "--buffer-size",
+        type=int,
+        default=100000,
+        help="Buffer size for TD3.",
     )
     parser.add_argument(
         "--save-freq",
@@ -305,7 +326,7 @@ if __name__ == "__main__":
         "--n-envs",
         type=int,
         default=8,
-        help="Number of parallel remote envs (e.g., 8 for ports 5001-5008).",
+        help="Number of parallel remote envs.",
     )
     parser.add_argument(
         "--eval-freq",
