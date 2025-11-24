@@ -242,7 +242,10 @@ def get_args():
         "--host", type=str, default="0.0.0.0", help="The host of the server."
     )
     parser.add_argument(
-        "--scenario", type=str, default="austria_competition", help="The scenario name."
+        "--scenario",
+        type=str,
+        default="austria_competition_collisionStop",
+        help="The scenario name.",
     )
     args = parser.parse_args()
     sid = args.sid
@@ -263,7 +266,7 @@ def init_server():
     sid = "313551174"
     port = 5000
     host = "0.0.0.0"
-    scenario = "austria_competition"
+    scenario = "austria_competition_collisionStop"
     if "austria" in scenario:
         MAX_ACCU_TIME = 900
     else:
