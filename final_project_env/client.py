@@ -89,7 +89,7 @@ class RemoteRacecarEnv(gym.Env):
         reward = float(data.get("reward", 0.0))
         terminated = bool(data.get("terminal", False))
         truncated = bool(data.get("truncated", False))
-        info = data.get("info", {})
+        info = {}
 
         data = get_observation(self.url)
         obs = np.asarray(data["observation"], dtype=np.uint8)
@@ -334,10 +334,7 @@ if __name__ == "__main__":
     if not args.eval:
         training(args)
     else:
-        # Initialize the RL Agent for inference
-        import gymnasium as gym
-
-        rand_agent = CarRacingAgent(
+        agent = CarRacingAgent(
             action_space=gym.spaces.Box(
                 low=np.array([-1, -1]), high=np.array([1, 1]), dtype=np.float32
             ),
@@ -346,4 +343,9 @@ if __name__ == "__main__":
             device=args.device,
         )
 
-        connect(rand_agent, url=args.url)
+        if not args.url:
+            import server
+
+            server.init_server()
+
+        connect(agent, url=args.url)

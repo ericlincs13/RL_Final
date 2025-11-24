@@ -175,7 +175,6 @@ def set_action(action, port_num=None, skip_print=False):
 
         return {
             "truncated": bool(trunc),
-            "info": info,
             "reward": reward,
             "terminal": bool(terminal),
         }
@@ -265,7 +264,10 @@ def init_server():
     port = 5000
     host = "0.0.0.0"
     scenario = "austria_competition"
-    MAX_ACCU_TIME = 900
+    if "austria" in scenario:
+        MAX_ACCU_TIME = 900
+    else:
+        MAX_ACCU_TIME = 600
 
     env = RaceEnv(
         scenario=scenario,
