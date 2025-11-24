@@ -211,7 +211,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-freq",
         type=int,
-        default=100000,
+        default=10000,
         help="Save checkpoint every N environment steps during training.",
     )
     parser.add_argument(

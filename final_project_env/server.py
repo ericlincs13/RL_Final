@@ -258,9 +258,14 @@ def get_args():
 
 
 def init_server():
-    global env, obs, info
+    global env, obs, info, output_freq, sid, port, host, scenario, MAX_ACCU_TIME
 
-    get_args()
+    output_freq = 5
+    sid = "313551174"
+    port = 5000
+    host = "0.0.0.0"
+    scenario = "austria_competition"
+    MAX_ACCU_TIME = 900
 
     env = RaceEnv(
         scenario=scenario,
@@ -271,6 +276,12 @@ def init_server():
 
 
 if __name__ == "__main__":
-    init_server()
+    get_args()
+    env = RaceEnv(
+        scenario=scenario,
+        render_mode="rgb_array_birds_eye",
+        reset_when_collision=True if "austria" in scenario else False,
+    )
+    obs, info = env.reset()
     #
     app.run(debug=False, host="0.0.0.0", port=port)
