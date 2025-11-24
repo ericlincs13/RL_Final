@@ -42,6 +42,7 @@ final_project_env/tests/
 .cursor/
 
 # generated
+eval_logs/
 weights/
 results/
 
