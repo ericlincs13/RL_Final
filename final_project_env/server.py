@@ -104,27 +104,25 @@ def get_observation(port_num):
         global obs, last_get_obs_time
 
         if terminal:
-            return jsonify({"observation": obs.tolist(), "terminal": bool(terminal)})
+            return {"observation": obs.tolist(), "terminal": bool(terminal)}
 
         # Record time
         last_get_obs_time = time.time()
 
-        return jsonify({"observation": obs.tolist()})
+        return {"observation": obs.tolist()}
     except Exception as e:
         if SERVER_RAISE_EXCEPTION:
             raise e
         print(e)
-        return jsonify({"error": str(e)})
+        return {"error": str(e)}
 
 
-def set_action(port_num):
+def set_action(action, port_num):
     try:
         global obs, reward, terminal, trunc, info, step, output_freq, sid, accu_time
 
         if terminal:
-            return jsonify({"terminal": bool(terminal)})
-
-        action = request.json.get("action")
+            return {"terminal": bool(terminal)}
 
         accu_time += time.time() - last_get_obs_time
 
@@ -174,32 +172,38 @@ def set_action(port_num):
             print(f"Video saved to {video_name}!")
             print(f"===================================")
 
-        return jsonify({"terminal": bool(terminal)})
+        return {"terminal": bool(terminal)}
     except Exception as e:
         if SERVER_RAISE_EXCEPTION:
             raise e
         print(e)
-        return jsonify({"error": str(e)})
+        return {"error": str(e)}
 
 
 @app.route("/<int:port_num>", methods=["GET"])
 def get_obs_with_port(port_num):
-    return get_observation(port_num)
+    data = get_observation(port_num)
+    return jsonify(data)
 
 
 @app.route("/", methods=["GET"])
 def get_obs_without_port():
-    return get_observation(-1)
+    data = get_observation(-1)
+    return jsonify(data)
 
 
 @app.route("/<int:port_num>", methods=["POST"])
 def set_action_with_port(port_num):
-    return set_action(port_num)
+    action = request.json.get("action")
+    data = set_action(action, port_num)
+    return jsonify(data)
 
 
 @app.route("/", methods=["POST"])
 def set_action_without_port():
-    return set_action(-1)
+    action = request.json.get("action")
+    data = set_action(action, -1)
+    return jsonify(data)
 
 
 @app.route("/realtime", methods=["GET"])
