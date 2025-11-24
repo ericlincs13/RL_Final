@@ -174,13 +174,7 @@ def set_action(port_num):
             print(f"Video saved to {video_name}!")
             print(f"===================================")
 
-        return jsonify(
-            {
-                "observation": obs.tolist(),
-                "reward": reward,
-                "terminal": bool(terminal),
-            }
-        )
+        return jsonify({"terminal": bool(terminal)})
     except Exception as e:
         if SERVER_RAISE_EXCEPTION:
             raise e
