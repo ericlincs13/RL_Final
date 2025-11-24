@@ -117,7 +117,7 @@ def get_observation(port_num):
         return {"error": str(e)}
 
 
-def set_action(action, port_num):
+def set_action(action, port_num, skip_print=False):
     try:
         global obs, reward, terminal, trunc, info, step, output_freq, sid, accu_time
 
@@ -153,13 +153,13 @@ def set_action(action, port_num):
         # plt.imshow(obs.transpose(1, 2, 0))
         # plt.show()
 
-        if step % output_freq == 0:
+        if step % output_freq == 0 and not skip_print:
             img = get_img_views()
             # plt.imshow(img)
             # plt.show()
             images.append(img)
 
-        if terminal:
+        if terminal and not skip_print:
             if round(accu_time) > MAX_ACCU_TIME:
                 print(
                     f'[Time Limit Error] Accu time "{accu_time}" violate the limit {MAX_ACCU_TIME} (sec)!'
