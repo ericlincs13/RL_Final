@@ -135,20 +135,21 @@ def set_action(action, port_num, skip_print=False):
         env_time = info["time"]
 
         # Print information
-        print_info = (
-            f'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Step: {step} Lap: {info["lap"]}, '
-            f'Progress: {info["progress"]:.3f}, '
-            f'EnvTime: {info["time"]:.3f} '
-            f"AccTime: {accu_time:.3f} "
-        )
-        if info.get("n_collision") is not None:
-            print_info += f'Collision: {info["n_collision"]} '
-        if info.get("collision_penalties") is not None:
-            print_info += "CollisionPenalties: "
-            for penalty in info["collision_penalties"]:
-                print_info += f"{penalty:.3f} "
+        if not skip_print:
+            print_info = (
+                f'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Step: {step} Lap: {info["lap"]}, '
+                f'Progress: {info["progress"]:.3f}, '
+                f'EnvTime: {info["time"]:.3f} '
+                f"AccTime: {accu_time:.3f} "
+            )
+            if info.get("n_collision") is not None:
+                print_info += f'Collision: {info["n_collision"]} '
+            if info.get("collision_penalties") is not None:
+                print_info += "CollisionPenalties: "
+                for penalty in info["collision_penalties"]:
+                    print_info += f"{penalty:.3f} "
 
-        print(print_info)
+            print(print_info)
 
         # plt.imshow(obs.transpose(1, 2, 0))
         # plt.show()
@@ -172,7 +173,12 @@ def set_action(action, port_num, skip_print=False):
             print(f"Video saved to {video_name}!")
             print(f"===================================")
 
-        return {"terminal": bool(terminal)}
+        return {
+            "truncated": bool(trunc),
+            "info": info,
+            "reward": reward,
+            "terminal": bool(terminal),
+        }
     except Exception as e:
         if SERVER_RAISE_EXCEPTION:
             raise e
