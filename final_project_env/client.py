@@ -1,3 +1,4 @@
+import os
 import argparse
 import json
 import numpy as np
@@ -167,6 +168,86 @@ def connect(agent, url=None):
             return
 
 
+def training(args):
+    try:
+        from stable_baselines3 import PPO
+        from stable_baselines3.common.callbacks import (
+            CallbackList,
+            CheckpointCallback,
+            EvalCallback,
+        )
+        from stable_baselines3.common.vec_env import SubprocVecEnv
+    except Exception as e:
+        raise RuntimeError(f"Stable-Baselines3 is required for training: {e}")
+
+    # Prefer GPU when requested
+    device = args.device
+    if device == "cuda":
+        try:
+            import torch
+
+            if not torch.cuda.is_available():
+                print("Warning: CUDA not available, falling back to CPU.")
+                device = "cpu"
+        except Exception:
+            print(
+                "Warning: torch not available to check CUDA; continuing with 'cuda' which may fail."
+            )
+
+    def _make_env():
+        return lambda: RemoteRacecarEnv(url=args.url)
+
+    # Enable gSDE for continuous control per SB3 recommendation notes
+    model = PPO(
+        policy="CnnPolicy",
+        env=SubprocVecEnv([_make_env() for _ in range(args.n_envs)]),
+        device=device,
+        learning_rate=args.lr,
+        batch_size=args.batch_size,
+        verbose=1,
+        use_sde=True,
+    )
+
+    print(
+        f"Start PPO training on device={device} for total_timesteps={args.total_timesteps}"
+    )
+    # Prepare checkpoint and (optional) evaluation callbacks for periodic saving/eval
+    os.makedirs(args.save_dir, exist_ok=True)
+    callback_list = []
+
+    checkpoint_callback = CheckpointCallback(
+        save_freq=int(args.save_freq),
+        save_path=args.save_dir,
+        name_prefix="ppo_racecar",
+        save_replay_buffer=False,
+        save_vecnormalize=False,
+    )
+    callback_list.append(checkpoint_callback)
+
+    # Optional: periodic evaluation during training
+    if args.eval_freq > 0:
+        os.makedirs(args.eval_log_dir, exist_ok=True)
+        eval_env = RemoteRacecarEnv(url=args.url)
+        eval_callback = EvalCallback(
+            eval_env,
+            n_eval_episodes=int(args.eval_episodes),
+            eval_freq=int(args.eval_freq),
+            log_path=args.eval_log_dir,
+            deterministic=True,
+            render=False,
+        )
+        callback_list.append(eval_callback)
+
+    # Use a single callback or a CallbackList depending on how many we have
+    if len(callback_list) == 1:
+        callback = callback_list[0]
+    else:
+        callback = CallbackList(callback_list)
+
+    model.learn(total_timesteps=int(args.total_timesteps), callback=callback)
+    model.save(f"{args.save_dir}/ppo_racecar_final.zip")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -226,63 +307,32 @@ if __name__ == "__main__":
         default=8,
         help="Number of parallel remote envs (e.g., 8 for ports 5001-5008).",
     )
+    parser.add_argument(
+        "--eval-freq",
+        type=int,
+        default=10000,
+        help=(
+            "Evaluate the PPO agent every N environment steps during training "
+            "(set <= 0 to disable evaluation)."
+        ),
+    )
+    parser.add_argument(
+        "--eval-episodes",
+        type=int,
+        default=5,
+        help="Number of evaluation episodes to run each time evaluation is triggered.",
+    )
+    parser.add_argument(
+        "--eval-log-dir",
+        type=str,
+        default="eval_logs",
+        help="Directory to store evaluation logs (episode rewards, lengths, etc.).",
+    )
     args = parser.parse_args()
 
     # Train or run inference
     if not args.eval:
-        try:
-            from stable_baselines3 import PPO
-            from stable_baselines3.common.callbacks import CheckpointCallback
-            from stable_baselines3.common.vec_env import SubprocVecEnv
-        except Exception as e:
-            raise RuntimeError(f"Stable-Baselines3 is required for training: {e}")
-
-        # Prefer GPU when requested
-        device = args.device
-        if device == "cuda":
-            try:
-                import torch
-
-                if not torch.cuda.is_available():
-                    print("Warning: CUDA not available, falling back to CPU.")
-                    device = "cpu"
-            except Exception:
-                print(
-                    "Warning: torch not available to check CUDA; continuing with 'cuda' which may fail."
-                )
-
-        def _make_env():
-            return lambda: RemoteRacecarEnv(url=args.url)
-
-        # Enable gSDE for continuous control per SB3 recommendation notes
-        model = PPO(
-            policy="CnnPolicy",
-            env=SubprocVecEnv([_make_env() for _ in range(args.n_envs)]),
-            device=device,
-            learning_rate=args.lr,
-            batch_size=args.batch_size,
-            verbose=1,
-            use_sde=True,
-        )
-
-        print(
-            f"Start PPO training on device={device} for total_timesteps={args.total_timesteps}"
-        )
-        # Prepare checkpoint callback for periodic saving
-        import os
-
-        os.makedirs(args.save_dir, exist_ok=True)
-        checkpoint_callback = CheckpointCallback(
-            save_freq=int(args.save_freq),
-            save_path=args.save_dir,
-            name_prefix="ppo_racecar",
-            save_replay_buffer=False,
-            save_vecnormalize=False,
-        )
-        model.learn(
-            total_timesteps=int(args.total_timesteps), callback=checkpoint_callback
-        )
-        model.save(f"{args.save_dir}/ppo_racecar_final.zip")
+        training(args)
     else:
         # Initialize the RL Agent for inference
         import gymnasium as gym
