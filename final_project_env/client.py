@@ -223,7 +223,7 @@ def training(args):
     checkpoint_callback = CheckpointCallback(
         save_freq=int(args.save_freq),
         save_path=args.save_dir,
-        name_prefix="td3_racecar",
+        name_prefix="racecar",
         save_replay_buffer=False,
         save_vecnormalize=False,
     )
@@ -250,7 +250,7 @@ def training(args):
         callback = CallbackList(callback_list)
 
     model.learn(total_timesteps=int(args.total_timesteps), callback=callback)
-    model.save(f"{args.save_dir}/td3_racecar_final.zip")
+    model.save(f"{args.save_dir}/racecar_final.zip")
 
 
 if __name__ == "__main__":
@@ -291,7 +291,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-dir",
         type=str,
-        default="weights",
+        default="td3_weights",
         help="Directory to store periodic checkpoints.",
     )
     parser.add_argument(
