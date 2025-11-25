@@ -114,27 +114,27 @@ class CarRacingAgent:
         self.action_space = action_space
         self.deterministic = deterministic
         self.model = None
-        # Lazy import of SB3 and attempt to load PPO model (no env creation)
+        # Lazy import of SB3 and attempt to load model (no env creation)
         try:
             from stable_baselines3 import PPO  # type: ignore
             import os
 
             if model_path is not None and os.path.isfile(model_path):
                 self.model = PPO.load(model_path, device=device)
-                print(f"Loaded PPO model from: {model_path}")
+                print(f"Loaded model from: {model_path}")
             else:
                 if model_path:
                     print(
-                        f"PPO model not found at: {model_path} — falling back to random actions."
+                        f"Model not found at: {model_path} — falling back to random actions."
                     )
         except Exception as e:
             # SB3 not installed or load failed
             print(
-                f"PPO not available or failed to load ({e}) — falling back to random actions."
+                f"Not available or failed to load ({e}) — falling back to random actions."
             )
 
     def act(self, observation):
-        # Prefer PPO policy inference when available
+        # Prefer policy inference when available
         if self.model is not None:
             try:
                 action, _ = self.model.predict(
@@ -145,7 +145,7 @@ class CarRacingAgent:
                 action = np.clip(action, self.action_space.low, self.action_space.high)
                 return action
             except Exception as e:
-                print(f"PPO predict failed ({e}) — falling back to random action.")
+                print(f"Predict failed ({e}) — falling back to random action.")
         # Fallback: random continuous action
         return self.action_space.sample()
 
@@ -202,7 +202,7 @@ def training(args):
     def _make_env():
         return lambda: RemoteRacecarEnv(url=args.url)
 
-    # PPO for continuous control
+    # Model for continuous control
     env = SubprocVecEnv([_make_env() for _ in range(args.n_envs)])
     env = VecMonitor(env)
     model = PPO(
@@ -215,7 +215,7 @@ def training(args):
     )
 
     print(
-        f"Start PPO training on device={device} for total_timesteps={args.total_timesteps}"
+        f"Start training on device={device} for total_timesteps={args.total_timesteps}"
     )
     # Prepare checkpoint and (optional) evaluation callbacks for periodic saving/eval
     os.makedirs(args.save_dir, exist_ok=True)
@@ -266,24 +266,24 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         type=str,
-        help="Path to SB3 PPO model (.zip). If not found, fallback to random actions.",
+        help="Path to SB3 model (.zip). If not found, fallback to random actions.",
     )
     parser.add_argument(
         "--eval",
         action="store_true",
-        help="Evaluate the PPO agent against the remote server.",
+        help="Evaluate the agent against the remote server.",
     )
     parser.add_argument(
         "--total-timesteps",
         type=int,
         default=1e8,
-        help="Total timesteps for PPO training.",
+        help="Total timesteps for training.",
     )
     parser.add_argument(
         "--device",
         type=str,
         default="cuda",
-        help='Device to use for PPO ("cuda" for GPU, or "cpu").',
+        help='Device to use ("cuda" for GPU, or "cpu").',
     )
     parser.add_argument(
         "--save-freq",
@@ -295,7 +295,7 @@ if __name__ == "__main__":
         "--save-dir",
         type=str,
         default="weights",
-        help="Directory to store periodic PPO checkpoints.",
+        help="Directory to store periodic checkpoints.",
     )
     parser.add_argument(
         "--n-envs",
@@ -308,7 +308,7 @@ if __name__ == "__main__":
         type=int,
         default=1000,
         help=(
-            "Evaluate the PPO agent every N environment steps during training "
+            "Evaluate the agent every N environment steps during training "
             "(set <= 0 to disable evaluation)."
         ),
     )
