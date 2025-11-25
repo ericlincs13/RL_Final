@@ -180,7 +180,8 @@ def training(args):
             CheckpointCallback,
             EvalCallback,
         )
-        from stable_baselines3.common.vec_env import SubprocVecEnv
+        from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
+        from stable_baselines3.common.monitor import Monitor
     except Exception as e:
         raise RuntimeError(f"Stable-Baselines3 is required for training: {e}")
 
@@ -203,6 +204,7 @@ def training(args):
 
     # PPO for continuous control
     env = SubprocVecEnv([_make_env() for _ in range(args.n_envs)])
+    env = VecMonitor(env)
     model = PPO(
         policy="CnnPolicy",
         env=env,
@@ -230,6 +232,7 @@ def training(args):
     if args.eval_freq > 0:
         os.makedirs(args.eval_log_dir, exist_ok=True)
         eval_env = RemoteRacecarEnv(url=args.url)
+        eval_env = Monitor(eval_env)
         eval_callback = EvalCallback(
             eval_env,
             n_eval_episodes=int(args.eval_episodes),
@@ -295,13 +298,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--n-envs",
         type=int,
-        default=8,
+        default=10,
         help="Number of parallel remote envs.",
     )
     parser.add_argument(
         "--eval-freq",
         type=int,
-        default=10000,
+        default=1000,
         help=(
             "Evaluate the PPO agent every N environment steps during training "
             "(set <= 0 to disable evaluation)."
