@@ -20,6 +20,7 @@ MAX_ACCU_TIME = -1
 
 #
 env, reward, trunc, info = None, None, None, None
+inverse = False
 obs: Optional[np.array] = None
 sid: Optional[str] = None
 output_freq: Optional[int] = None
@@ -37,6 +38,13 @@ app = Flask(__name__)
 accu_time = 0.0
 last_get_obs_time: Optional[float] = None
 end_time: Optional[float] = None
+
+
+def inverse_observation(obs):
+    global inverse
+    if inverse:
+        obs = obs[:, :, ::-1].copy()
+    return obs
 
 
 def get_img_views():
@@ -98,9 +106,14 @@ def record_video(filename: str):
     video.release()
 
 
-def reset_env():
-    global env, obs, info, terminal, last_get_obs_time
+def reset_env(random_inverse=False):
+    global env, obs, info, terminal, last_get_obs_time, inverse
+    if random_inverse:
+        inverse = np.random.choice([True, False])
+    else:
+        inverse = False
     obs, info = env.reset()
+    obs = inverse_observation(obs)
     terminal = False
     last_get_obs_time = time.time()
     return {"observation": obs.tolist()}
@@ -117,7 +130,7 @@ def get_observation(port_num=None):
         # Record time
         last_get_obs_time = time.time()
 
-        return {"observation": obs.tolist()}
+        return {"observation": inverse_observation(obs).tolist()}
     except Exception as e:
         if SERVER_RAISE_EXCEPTION:
             raise e
@@ -133,6 +146,9 @@ def set_action(action, port_num=None, skip_print=False):
             return {"terminal": bool(terminal)}
 
         accu_time += time.time() - last_get_obs_time
+
+        if inverse:
+            action = [action[0], -action[1]]
 
         step += 1
         obs, reward, terminal, trunc, info = env.step(action)
@@ -274,7 +290,7 @@ def init_server():
     sid = "313551174"
     port = 5000
     host = "0.0.0.0"
-    scenario = "austria_competition"
+    scenario = "circle_cw_competition_collisionStop"
     if "austria" in scenario:
         MAX_ACCU_TIME = 900
     else:
