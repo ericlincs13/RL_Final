@@ -299,7 +299,7 @@ def init_server():
     env = RaceEnv(
         scenario=scenario,
         render_mode="rgb_array_birds_eye",
-        reset_when_collision=True if "austria" in scenario else False,
+        reset_when_collision=False if "collisionStop" in scenario else True,
     )
 
 
@@ -308,7 +308,7 @@ if __name__ == "__main__":
     env = RaceEnv(
         scenario=scenario,
         render_mode="rgb_array_birds_eye",
-        reset_when_collision=True if "austria" in scenario else False,
+        reset_when_collision=False if "collisionStop" in scenario else True,
     )
     reset_env()
     #
