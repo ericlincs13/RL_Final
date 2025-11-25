@@ -210,6 +210,8 @@ def training(args):
         env=env,
         device=device,
         verbose=0,
+        use_sde=True,
+        n_steps=int(2048 / args.n_envs),
     )
 
     print(
@@ -298,7 +300,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--n-envs",
         type=int,
-        default=10,
+        default=8,
         help="Number of parallel remote envs.",
     )
     parser.add_argument(
