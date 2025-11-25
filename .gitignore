@@ -3,6 +3,5 @@ __pycache__/
 *.pdf
 *.pptx
 *.egg-info
-results/
-weights/
-eval_logs/
+*.zip
+*.mp4
