@@ -239,7 +239,6 @@ def training(args):
             eval_env,
             n_eval_episodes=int(args.eval_episodes),
             eval_freq=int(args.eval_freq),
-            log_path=args.eval_log_dir,
             best_model_save_path=args.save_dir,
             deterministic=True,
             render=False,
@@ -317,12 +316,6 @@ if __name__ == "__main__":
         type=int,
         default=5,
         help="Number of evaluation episodes to run each time evaluation is triggered.",
-    )
-    parser.add_argument(
-        "--eval-log-dir",
-        type=str,
-        default="eval_logs",
-        help="Directory to store evaluation logs (episode rewards, lengths, etc.).",
     )
     parser.add_argument(
         "--env-random-inverse",
