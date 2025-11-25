@@ -15,5 +15,5 @@ agents:
         collision_reward: 0.0,
         progress_reward: 1.0,
         frame_reward: 0.0,
-        velocity_reward: 0.01,
+        velocity_reward: 0.0,
       }
