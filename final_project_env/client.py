@@ -28,9 +28,6 @@ def get_observation(url=None):
 def set_action(action, url=None, skip_print=False):
     if not url:
         data = server.set_action(action, skip_print=skip_print)
-        print(
-            f"terminal: {data.get('terminal', '-')}, truncated: {data.get('truncated', '-')}, reward: {data.get('reward', '-')}"
-        )
     else:
         import requests
 
@@ -235,6 +232,7 @@ def training(args):
             n_eval_episodes=int(args.eval_episodes),
             eval_freq=int(args.eval_freq),
             log_path=args.eval_log_dir,
+            best_model_save_path=args.save_dir,
             deterministic=True,
             render=False,
         )
