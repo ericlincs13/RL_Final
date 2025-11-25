@@ -210,6 +210,7 @@ def training(args):
         env=env,
         device=device,
         train_freq=4,
+        buffer_size=100000,
     )
 
     print(
@@ -230,7 +231,6 @@ def training(args):
 
     # Optional: periodic evaluation during training
     if args.eval_freq > 0:
-        os.makedirs(args.eval_log_dir, exist_ok=True)
         eval_env = RemoteRacecarEnv(url=args.url)
         eval_env = Monitor(eval_env)
         eval_callback = EvalCallback(
@@ -285,7 +285,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save-freq",
         type=int,
-        default=10000,
+        default=100000,
         help="Save checkpoint every N environment steps during training.",
     )
     parser.add_argument(
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--eval-freq",
         type=int,
-        default=1000,
+        default=10000,
         help=(
             "Evaluate the agent every N environment steps during training "
             "(set <= 0 to disable evaluation)."
