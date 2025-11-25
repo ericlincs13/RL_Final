@@ -3,12 +3,16 @@ import argparse
 import json
 import numpy as np
 import gymnasium as gym
+import server
+
+
+def reset_env():
+    data = server.reset_env()
+    return data
 
 
 def get_observation(url=None):
     if not url:
-        import server
-
         data = server.get_observation()
     else:
         import requests
@@ -23,9 +27,10 @@ def get_observation(url=None):
 
 def set_action(action, url=None, skip_print=False):
     if not url:
-        import server
-
         data = server.set_action(action, skip_print=skip_print)
+        print(
+            f"terminal: {data.get('terminal', '-')}, truncated: {data.get('truncated', '-')}, reward: {data.get('reward', '-')}"
+        )
     else:
         import requests
 
@@ -44,12 +49,10 @@ class RemoteRacecarEnv(gym.Env):
         self.url = url
 
         if not url:
-            import server
-
             server.init_server()
 
         # Probe one observation to infer shape/dtype
-        first = get_observation(self.url)
+        first = reset_env()
         obs = np.asarray(first["observation"], dtype=np.uint8)
 
         # Define spaces
@@ -75,7 +78,7 @@ class RemoteRacecarEnv(gym.Env):
     # Gymnasium API
     def reset(self, *, seed=None, options=None):
         # Request a fresh observation; server is expected to handle episode resets
-        data = get_observation(self.url)
+        data = reset_env()
         obs = np.asarray(data["observation"], dtype=np.uint8)
         self._last_obs = obs
         info = {}
@@ -91,9 +94,12 @@ class RemoteRacecarEnv(gym.Env):
         truncated = bool(data.get("truncated", False))
         info = {}
 
-        data = get_observation(self.url)
-        obs = np.asarray(data["observation"], dtype=np.uint8)
-        self._last_obs = obs
+        if not (terminated or truncated):
+            data_obs = get_observation(self.url)
+            if "observation" in data_obs:
+                obs = np.asarray(data_obs["observation"], dtype=np.uint8)
+                self._last_obs = obs
+        obs = self._last_obs
         return obs, reward, terminated, truncated, info
 
     def render(self):
@@ -151,6 +157,9 @@ def connect(agent, url=None):
         if data.get("error"):
             print(data["error"])
             break
+        if data.get("terminal"):
+            print("Episode finished.")
+            return
         obs = np.array(data["observation"]).astype(np.uint8)
 
         # Decide an action based on the observation (Replace this with your RL agent logic)
@@ -161,11 +170,6 @@ def connect(agent, url=None):
         if data.get("error"):
             print(data["error"])
             break
-        terminal = data["terminal"]
-
-        if terminal:
-            print("Episode finished.")
-            return
 
 
 def training(args):
@@ -330,8 +334,6 @@ if __name__ == "__main__":
         )
 
         if not args.url:
-            import server
-
             server.init_server()
 
         connect(agent, url=args.url)

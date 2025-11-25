@@ -98,13 +98,21 @@ def record_video(filename: str):
     video.release()
 
 
+def reset_env():
+    global env, obs, info, terminal, last_get_obs_time
+    obs, info = env.reset()
+    terminal = False
+    last_get_obs_time = time.time()
+    return {"observation": obs.tolist()}
+
+
 def get_observation(port_num=None):
     """Return the 3x128x128"""
     try:
         global obs, last_get_obs_time
 
         if terminal:
-            return {"observation": obs.tolist(), "terminal": bool(terminal)}
+            return {"terminal": bool(terminal)}
 
         # Record time
         last_get_obs_time = time.time()
@@ -277,7 +285,6 @@ def init_server():
         render_mode="rgb_array_birds_eye",
         reset_when_collision=True if "austria" in scenario else False,
     )
-    obs, info = env.reset()
 
 
 if __name__ == "__main__":
@@ -287,6 +294,6 @@ if __name__ == "__main__":
         render_mode="rgb_array_birds_eye",
         reset_when_collision=True if "austria" in scenario else False,
     )
-    obs, info = env.reset()
+    reset_env()
     #
     app.run(debug=False, host="0.0.0.0", port=port)
