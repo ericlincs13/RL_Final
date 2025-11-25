@@ -116,11 +116,11 @@ class CarRacingAgent:
         self.model = None
         # Lazy import of SB3 and attempt to load model (no env creation)
         try:
-            from stable_baselines3 import PPO  # type: ignore
+            from stable_baselines3 import TD3  # type: ignore
             import os
 
             if model_path is not None and os.path.isfile(model_path):
-                self.model = PPO.load(model_path, device=device)
+                self.model = TD3.load(model_path, device=device)
                 print(f"Loaded model from: {model_path}")
             else:
                 if model_path:
@@ -174,7 +174,7 @@ def connect(agent, url=None):
 
 def training(args):
     try:
-        from stable_baselines3 import PPO
+        from stable_baselines3 import TD3
         from stable_baselines3.common.callbacks import (
             CallbackList,
             CheckpointCallback,
@@ -205,13 +205,11 @@ def training(args):
     # Model for continuous control
     env = SubprocVecEnv([_make_env() for _ in range(args.n_envs)])
     env = VecMonitor(env)
-    model = PPO(
+    model = TD3(
         policy="CnnPolicy",
         env=env,
         device=device,
-        verbose=0,
-        use_sde=True,
-        n_steps=int(2048 / args.n_envs),
+        train_freq=4,
     )
 
     print(
@@ -224,7 +222,7 @@ def training(args):
     checkpoint_callback = CheckpointCallback(
         save_freq=int(args.save_freq),
         save_path=args.save_dir,
-        name_prefix="ppo_racecar",
+        name_prefix="td3_racecar",
         save_replay_buffer=False,
         save_vecnormalize=False,
     )
@@ -253,7 +251,7 @@ def training(args):
         callback = CallbackList(callback_list)
 
     model.learn(total_timesteps=int(args.total_timesteps), callback=callback)
-    model.save(f"{args.save_dir}/ppo_racecar_final.zip")
+    model.save(f"{args.save_dir}/td3_racecar_final.zip")
 
 
 if __name__ == "__main__":
@@ -300,7 +298,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--n-envs",
         type=int,
-        default=8,
+        default=1,
         help="Number of parallel remote envs.",
     )
     parser.add_argument(
