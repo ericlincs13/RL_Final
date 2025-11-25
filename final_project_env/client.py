@@ -6,8 +6,8 @@ import gymnasium as gym
 import server
 
 
-def reset_env():
-    data = server.reset_env()
+def reset_env(random_inverse=False):
+    data = server.reset_env(random_inverse)
     return data
 
 
@@ -42,14 +42,17 @@ def set_action(action, url=None, skip_print=False):
 class RemoteRacecarEnv(gym.Env):
     metadata = {"render_modes": []}
 
-    def __init__(self, url=None, action_low=None, action_high=None):
+    def __init__(
+        self, url=None, action_low=None, action_high=None, random_inverse=False
+    ):
         self.url = url
+        self.random_inverse = random_inverse
 
         if not url:
             server.init_server()
 
         # Probe one observation to infer shape/dtype
-        first = reset_env()
+        first = reset_env(self.random_inverse)
         obs = np.asarray(first["observation"], dtype=np.uint8)
 
         # Define spaces
@@ -75,7 +78,7 @@ class RemoteRacecarEnv(gym.Env):
     # Gymnasium API
     def reset(self, *, seed=None, options=None):
         # Request a fresh observation; server is expected to handle episode resets
-        data = reset_env()
+        data = reset_env(self.random_inverse)
         obs = np.asarray(data["observation"], dtype=np.uint8)
         self._last_obs = obs
         info = {}
@@ -315,6 +318,11 @@ if __name__ == "__main__":
         type=str,
         default="eval_logs",
         help="Directory to store evaluation logs (episode rewards, lengths, etc.).",
+    )
+    parser.add_argument(
+        "--env-random-inverse",
+        action="store_true",
+        help="Randomly inverse the environment.",
     )
     args = parser.parse_args()
 
