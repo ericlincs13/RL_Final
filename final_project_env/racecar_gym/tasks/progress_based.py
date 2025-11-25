@@ -267,7 +267,9 @@ class MaximizeProgressTaskCollisionInfluenceTimeLimit(Task):
             self.n_collision += 1
             reward += self._collision_reward
         reward += delta * self._progress_reward
-        reward += agent_state["velocity"] * self._velocity_reward
+        velocity = agent_state["velocity"]
+        # 若 velocity 是 ndarray，取平均後再乘以 _velocity_reward
+        reward += float(np.mean(velocity)) * self._velocity_reward
         self._last_stored_progress = progress
         return reward
 
