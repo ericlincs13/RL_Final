@@ -251,6 +251,8 @@ class MaximizeProgressTaskCollisionInfluenceTimeLimit(Task):
         self._frame_reward = frame_reward
         self.n_collision = 0
         self.collision_penalty_time_reduce = collision_penalty_time_reduce
+        self._max_velocity = max_velocity
+        self._min_velocity = min_velocity
 
     def reward(self, agent_id, state, action) -> float:
         agent_state = state[agent_id]
