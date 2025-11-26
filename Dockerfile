@@ -18,4 +18,4 @@ COPY final_project_env/ /workingdirectory/
 RUN python3 -m pip install -e .
     
 #
-CMD ["python3", "server.py", "--sid", "313551174", "--scenario", "austria_competition"]
+CMD ["python3", "server.py", "--scenario", "circle_cw_competition_collisionStop"]
