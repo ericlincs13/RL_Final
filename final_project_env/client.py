@@ -211,6 +211,7 @@ def training(args):
         device=device,
         train_freq=4,
         buffer_size=100000,
+        learning_starts=10000,
     )
 
     print(
