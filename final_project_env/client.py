@@ -232,7 +232,6 @@ def training(args):
 
     # Optional: periodic evaluation during training
     if args.eval_freq > 0:
-        os.makedirs(args.eval_log_dir, exist_ok=True)
         eval_env = RemoteRacecarEnv(url=args.url)
         eval_env = Monitor(eval_env)
         eval_callback = EvalCallback(
