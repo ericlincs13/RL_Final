@@ -272,9 +272,9 @@ class MaximizeProgressTaskCollisionInfluenceTimeLimit(Task):
         velocity = agent_state["velocity"]
         velocity_norm = np.linalg.norm(velocity[:3])
         if self._max_velocity is not None and velocity_norm > self._max_velocity:
-            reward += self._max_velocity - velocity_norm
+            reward -= 0.1
         elif self._min_velocity is not None and velocity_norm < self._min_velocity:
-            reward += velocity_norm - self._min_velocity
+            reward -= 0.1
         self._last_stored_progress = progress
         return reward
 
