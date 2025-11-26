@@ -209,9 +209,9 @@ def training(args):
         policy="CnnPolicy",
         env=env,
         device=device,
-        train_freq=4,
+        train_freq=2,
         buffer_size=100000,
-        learning_starts=10000,
+        learning_starts=5000,
     )
 
     print(
