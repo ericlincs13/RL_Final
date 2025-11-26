@@ -4,7 +4,7 @@
 
 ```bash
 cd final_project_env
-python client.py
+python client.py --env-random-inverse
 ```
 
 ## Inference
